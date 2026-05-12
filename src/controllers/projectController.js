@@ -2,8 +2,46 @@ const Project = require('../models/Project');
 
 const getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
-    res.json(projects);
+    const {
+      search,
+      category,
+      priority,
+      status,
+      sortBy = 'createdAt',
+      order = 'desc',
+      page = 1,
+      limit = 6,
+    } = req.query;
+
+    const filter = {};
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    if (category) filter.category = { $regex: category, $options: 'i' };
+    if (priority) filter.priority = priority;
+    if (status) filter.status = status;
+
+    const sortOrder = order === 'asc' ? 1 : -1;
+    const validSortFields = ['createdAt', 'name', 'priority', 'estimatedMinutes', 'loggedMinutes'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
+    const total = await Project.countDocuments(filter);
+    const projects = await Project.find(filter)
+      .sort({ [sortField]: sortOrder })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    res.json({
+      projects,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -53,10 +91,20 @@ const deleteProject = async (req, res) => {
   }
 };
 
+const getCategories = async (req, res) => {
+  try {
+    const categories = await Project.distinct('category', { category: { $ne: '' } });
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   getAllProjects,
   getProject,
   createProject,
   updateProject,
   deleteProject,
+  getCategories,
 };

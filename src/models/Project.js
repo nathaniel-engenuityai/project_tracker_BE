@@ -11,11 +11,21 @@ const projectSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    estimatedHours: {
+    category: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'medium',
+    },
+    estimatedMinutes: {
       type: Number,
       required: true,
     },
-    loggedHours: {
+    loggedMinutes: {
       type: Number,
       default: 0,
     },
