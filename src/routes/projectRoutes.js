@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticate = require('../middleware/auth');
 const {
   getAllProjects,
   getProject,
@@ -9,7 +10,9 @@ const {
   getCategories,
 } = require('../controllers/projectController');
 
-router.get('/categories', getCategories); 
+router.use(authenticate);
+
+router.get('/categories', getCategories);
 router.get('/', getAllProjects);
 router.get('/:id', getProject);
 router.post('/', createProject);

@@ -9,11 +9,11 @@ const getAllProjects = async (req, res) => {
       status,
       sortBy = 'createdAt',
       order = 'desc',
-      page = 1,
-      limit = 6,
+      page = '1',
+      limit = '6',
     } = req.query;
 
-    const filter = {};
+    const filter = { userId: req.userId };
 
     if (search) {
       filter.$or = [
@@ -49,7 +49,7 @@ const getAllProjects = async (req, res) => {
 
 const getProject = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findOne({ _id: req.params.id, userId: req.userId });
     if (!project) return res.status(404).json({ message: 'Project not found' });
     res.json(project);
   } catch (err) {
@@ -59,7 +59,7 @@ const getProject = async (req, res) => {
 
 const createProject = async (req, res) => {
   try {
-    const project = new Project(req.body);
+    const project = new Project({ ...req.body, userId: req.userId });
     const saved = await project.save();
     res.status(201).json(saved);
   } catch (err) {
@@ -69,8 +69,8 @@ const createProject = async (req, res) => {
 
 const updateProject = async (req, res) => {
   try {
-    const updated = await Project.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Project.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
       req.body,
       { new: true, runValidators: true }
     );
@@ -83,7 +83,7 @@ const updateProject = async (req, res) => {
 
 const deleteProject = async (req, res) => {
   try {
-    const deleted = await Project.findByIdAndDelete(req.params.id);
+    const deleted = await Project.findOneAndDelete({ _id: req.params.id, userId: req.userId });
     if (!deleted) return res.status(404).json({ message: 'Project not found' });
     res.json({ message: 'Project deleted' });
   } catch (err) {
@@ -93,7 +93,10 @@ const deleteProject = async (req, res) => {
 
 const getCategories = async (req, res) => {
   try {
-    const categories = await Project.distinct('category', { category: { $ne: '' } });
+    const categories = await Project.distinct('category', {
+      userId: req.userId,
+      category: { $ne: '' },
+    });
     res.json(categories);
   } catch (err) {
     res.status(500).json({ message: err.message });
