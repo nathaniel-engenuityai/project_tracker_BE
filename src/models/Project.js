@@ -38,6 +38,10 @@ const projectSchema = new mongoose.Schema(
       enum: ['not started', 'in progress', 'completed'],
       default: 'not started',
     },
+    deadline: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
