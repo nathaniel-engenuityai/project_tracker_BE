@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
-const projectSchema = new mongoose.Schema(
+const subtaskSchema = new mongoose.Schema(
   {
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      required: true,
+    },
     userId: {
       type: String,
       required: true,
@@ -10,20 +15,6 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-    },
-    category: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    priority: {
-      type: String,
-      enum: ['low', 'medium', 'high'],
-      default: 'medium',
     },
     estimatedMinutes: {
       type: Number,
@@ -38,10 +29,6 @@ const projectSchema = new mongoose.Schema(
       enum: ['not started', 'in progress', 'completed'],
       default: 'not started',
     },
-    deadline: {
-      type: Date,
-      default: null,
-    },
     order: {
       type: Number,
       default: 0,
@@ -50,4 +37,4 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model('Project', projectSchema);
+module.exports = mongoose.model('Subtask', subtaskSchema);

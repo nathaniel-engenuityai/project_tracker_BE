@@ -1,15 +1,19 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+import express, { json } from 'express';
+import { connect } from 'mongoose';
+import cors from 'cors';
 require('dotenv').config();
 
-const projectRoutes = require('./routes/projectRoutes');
-const uploadRoutes = require('./routes/uploadRoutes');
+import projectRoutes from './routes/projectRoutes';
+import uploadRoutes from './routes/uploadRoutes';
+
+import subtaskRoutes from './routes/subtaskRoutes';
+import subtaskController from './controllers/subtaskController';
+import authenticate from './middleware/auth';
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 app.use('/api/projects', projectRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -18,8 +22,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-mongoose
-  .connect(process.env.MONGO_URI)
+app.use('/api/projects/:projectId/subtasks', subtaskRoutes);
+app.put('/api/projects/reorder', authenticate, subtaskController.reorderProjects);
+
+connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(process.env.PORT || 8080, '0.0.0.0', () => {
