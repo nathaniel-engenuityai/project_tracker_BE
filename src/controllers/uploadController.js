@@ -9,17 +9,38 @@ const uploadAvatar = async (req, res) => {
       return res.status(400).json({ message: 'No file provided' });
     }
 
-    const filename = `avatars/${req.userId}-${Date.now()}`;
+    // Extract userId from FormData
+    const { userId } = req.body;
+
+    // Verify that userId is provided
+    if (!userId) {
+      return res.status(400).json({ message: 'userId field is required in FormData' });
+    }
+
+    // Verify that the authenticated user can only upload their own avatar
+    if (req.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized: Cannot upload avatar for another user' });
+    }
+
+    // Extract file extension from the original filename
+    const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
+    const filename = `users/${userId}/avatar.${fileExtension}`;
     const file = bucket.file(filename);
 
+    // Upload file to GCS
     await file.save(req.file.buffer, {
       contentType: req.file.mimetype,
       resumable: false,
     });
 
-    const publicUrl = `https://storage.googleapis.com/project-tracker-avatars-889275799849/${filename}`;
+    // Generate a signed URL (valid for 7 days)
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
-    res.json({ url: publicUrl });
+    res.json({ url: signedUrl });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
