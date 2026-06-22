@@ -34,10 +34,13 @@ const uploadAvatar = async (req, res) => {
     });
 
     // Generate a signed URL (valid for 7 days)
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    
     const [signedUrl] = await file.getSignedUrl({
       version: 'v4',
       action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expires: sevenDaysFromNow,
     });
 
     res.json({ url: signedUrl });
